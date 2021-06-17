@@ -55,7 +55,7 @@ mod example_steps {
             )
             .when_regex_async(
                 "something goes (.*)",
-                t!(|world, _ctx| crate::MyWorld::new().await.unwrap()),
+                t!(|_world, _ctx| crate::MyWorld::new().await.unwrap()),
             )
             .given(
                 "I am trying out Cucumber",

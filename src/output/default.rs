@@ -444,6 +444,20 @@ impl BasicOutput {
         }
         self.print_counter("steps", &result.steps);
 
+        if result.failed_scenarios.len() > 0 {
+            println!("\nFailed Scenarios:");
+            for s in result.failed_scenarios.iter() {
+                println!("- {}", s.name);
+            }
+        }
+
+        if result.timed_out_scenarios.len() > 0 {
+            println!("\nTimed Out Scenarios:");
+            for s in result.timed_out_scenarios.iter() {
+                println!("- {}", s.name);
+            }
+        }
+
         let t = result.elapsed;
         println!(
             "\nFinished in {}.{} seconds.",

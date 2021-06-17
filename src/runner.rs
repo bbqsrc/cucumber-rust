@@ -122,6 +122,10 @@ pub struct RunResult {
     pub scenarios: Stats,
     /// Stats of scenarios of this run
     pub steps: Stats,
+    /// the scenarios that failed
+    pub failed_scenarios: Vec<Rc<gherkin::Scenario>>,
+    /// the scenarios that timed out
+    pub timed_out_scenarios: Vec<Rc<gherkin::Scenario>>,
 }
 
 impl RunResult {
@@ -138,6 +142,8 @@ struct StatsCollector {
     rules: Stats,
     scenarios: Stats,
     steps: Stats,
+    failed_scenarios: Vec<Rc<gherkin::Scenario>>,
+    timed_out_scenarios: Vec<Rc<gherkin::Scenario>>,
 }
 
 impl StatsCollector {
@@ -148,6 +154,8 @@ impl StatsCollector {
             rules: Default::default(),
             scenarios: Default::default(),
             steps: Default::default(),
+            failed_scenarios: Default::default(),
+            timed_out_scenarios: Default::default(),
         }
     }
 
@@ -156,7 +164,7 @@ impl StatsCollector {
             RuleEvent::Starting => {
                 self.rules.total += 1;
             }
-            RuleEvent::Scenario(_, ref event) => self.handle_scenario_event(event),
+            RuleEvent::Scenario(scenario, ref event) => self.handle_scenario_event(scenario.clone(), event),
             RuleEvent::Skipped => {
                 self.rules.skipped += 1;
             }
@@ -172,7 +180,7 @@ impl StatsCollector {
         }
     }
 
-    fn handle_scenario_event(&mut self, event: &ScenarioEvent) {
+    fn handle_scenario_event(&mut self, scenario: Rc<gherkin::Scenario>, event: &ScenarioEvent) {
         match event {
             ScenarioEvent::Starting(_) => {
                 self.scenarios.total += 1;
@@ -187,6 +195,7 @@ impl StatsCollector {
             }
             ScenarioEvent::Failed(FailureKind::Panic) => {
                 self.scenarios.failed += 1;
+                self.failed_scenarios.push(scenario.clone())
             }
             ScenarioEvent::Failed(FailureKind::TimedOut) => {
                 self.scenarios.timed_out += 1;
@@ -223,7 +232,7 @@ impl StatsCollector {
             FeatureEvent::Starting => {
                 self.features.total += 1;
             }
-            FeatureEvent::Scenario(_, ref event) => self.handle_scenario_event(event),
+            FeatureEvent::Scenario(scenario, ref event) => self.handle_scenario_event(scenario.clone(), event),
             FeatureEvent::Rule(_, ref event) => self.handle_rule_event(event),
             _ => {}
         }
@@ -236,6 +245,8 @@ impl StatsCollector {
             rules,
             scenarios,
             steps,
+            failed_scenarios,
+            timed_out_scenarios
         } = self;
 
         RunResult {
@@ -245,6 +256,8 @@ impl StatsCollector {
             rules,
             scenarios,
             steps,
+            failed_scenarios,
+            timed_out_scenarios
         }
     }
 }
